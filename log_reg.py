@@ -8,6 +8,7 @@ import os
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
 
 # Fix seed for replicability
 seed=103
@@ -67,7 +68,8 @@ def train_eval(X_train, y_train, X_test, y_test):
     Classifier has been changed from LinearSVC to Logistic Regression
     """
 
-    classifier = LogisticRegression(n_jobs=-1)
+    #classifier = LogisticRegression(n_jobs=-1)
+    classifier = LinearSVC()
     
     classifier.fit(X_train, y_train)
     print(classifier.classes_)
