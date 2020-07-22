@@ -6,8 +6,11 @@ from sklearn.metrics import accuracy_score, classification_report, f1_score
 import random
 import os
 import numpy as np
+from scipy.sparse import hstack
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 
 # Fix seed for replicability
@@ -22,7 +25,7 @@ def encode_label(label):
     if label == "UNINFORMATIVE": return 0
     else: return 1
 
-def load_file(file, DictVect = False):
+def load_file(file, DictVect = False, tfidf = False, word_gram:str = "5", char_gram:str = "4"):
     """
     Load file and transform into correct format adapted from https://github.com/bplank/bleaching-text/
     
@@ -38,28 +41,45 @@ def load_file(file, DictVect = False):
 
     x = df["Text"].values
     y = df["Label"].values
-
+        
     if DictVect == False:
         
         dictVectorizer = DictVectorizer()
 
-        vectorizerWords = Featurizer(word_ngrams="5", char_ngrams="0")
+        vectorizerWords = Featurizer(word_ngrams=word_gram, char_ngrams=char_gram)
         x_dict = vectorizerWords.fit_transform(x)
         x_train = dictVectorizer.fit_transform(x_dict)
 
         print("Vocab size: ", len(dictVectorizer.vocabulary_))
 
-        return x_train, y, dictVectorizer
+        if tfidf == True:
+
+            tfIdfTransformer = TfidfTransformer(sublinear_tf=True)
+
+            x_train = tfIdfTransformer.fit_transform(x_train)
+
+            return x_train, y, dictVectorizer, tfIdfTransformer
+
+        else:
+
+            return x_train, y, dictVectorizer, 0
 
     else:
-        vectorizerWords = Featurizer(word_ngrams="5", char_ngrams="0")
+        vectorizerWords = Featurizer(word_ngrams=word_gram, char_ngrams=char_gram)
         x_dict = vectorizerWords.fit_transform(x)
-        x_train = DictVect.transform(x_dict)
+        x_test = DictVect.transform(x_dict)
 
         print("Vocab size: ", len(DictVect.vocabulary_))
 
-        return x_train, y, DictVect
+        if tfidf != False:
 
+            x_test = tfidf.transform(x_test)
+
+            return x_test, y, DictVect, tfidf
+
+        else:
+
+            return x_test, y, DictVect, 0
 
 def train_eval(X_train, y_train, X_test, y_test):
 
@@ -68,8 +88,9 @@ def train_eval(X_train, y_train, X_test, y_test):
     Classifier has been changed from LinearSVC to Logistic Regression
     """
 
-    #classifier = LogisticRegression(n_jobs=-1)
-    classifier = LinearSVC()
+    classifier = LogisticRegression(n_jobs=-1)
+    #classifier = LinearSVC()
+    #classifier = MLPClassifier(hidden_layer_sizes=(100, 32, 1), random_state=seed)
     
     classifier.fit(X_train, y_train)
     print(classifier.classes_)
@@ -94,9 +115,19 @@ if __name__ == "__main__":
 
     print(os.listdir("data/"))
 
-    X_train, y_train, dictvect = load_file("data/train.tsv")
-    X_dev, y_dev, _ = load_file("data/valid.tsv", dictvect)
+    wg = "5"
+    cg = "4"
 
-    f1_test, acc_test, _ = train_eval(X_train, y_train, X_dev, y_dev)
-    print("weighted f1: {0:.1f}".format(f1_test * 100))
-    print("accuracy: {0:.1f}".format(acc_test * 100))
+    X_train, y_train, dictvect, tfidf = load_file("data/train.tsv", word_gram=wg, char_gram=cg)
+    X_dev, y_dev, _, _ = load_file("data/valid.tsv", dictvect, word_gram=wg, char_gram=cg)
+
+    X = hstack((X_train, X_dev))
+    #y = np.concatenate([y_train.todense(), y_dev.todense()])
+
+    print(X_train.shape, y_train.shape)
+    print(X_dev.shape, y_dev.shape)
+    print(X.shape)
+
+    #f1_test, acc_test, _ = train_eval(X_train, y_train, X_dev, y_dev)
+    #print("weighted f1: {0:.1f}".format(f1_test * 100))
+    #print("accuracy: {0:.1f}".format(acc_test * 100))
