@@ -12,6 +12,7 @@ from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
+from sklearn.model_selection import StratifiedKFold
 
 # Fix seed for replicability
 seed=103
@@ -81,6 +82,78 @@ def load_file(file, DictVect = False, tfidf = False, word_gram:str = "5", char_g
 
             return x_test, y, DictVect, 0
 
+def load2Files(file1, file2, DictVect = False, tfidf = False, word_gram:str = "5", char_gram:str = "4"):
+    """
+    This function combines two files. Used to make KFold including both training and val data.
+    """
+
+
+    # Read file
+    df1 = pd.read_csv(file1, sep="\t")
+    df2 = pd.read_csv(file2, sep="\t")
+
+    # Convert labels
+    df1["Label"] = df1["Label"].apply(lambda x: encode_label(x))
+    df2["Label"] = df2["Label"].apply(lambda x: encode_label(x))
+
+    x1 = df1["Text"].values
+    x2 = df2["Text"].values
+    y1 = df1["Label"].values
+    y2 = df2["Label"].values
+
+    # Combine files
+    X = np.concatenate((x1,x2))
+    y = np.concatenate((y1,y2))
+
+    dictVectorizer = DictVectorizer()
+
+    vectorizerWords = Featurizer(word_ngrams=word_gram, char_ngrams=char_gram)
+    x_dict = vectorizerWords.fit_transform(X)
+    x_train = dictVectorizer.fit_transform(x_dict)
+
+    print("Vocab size: ", len(dictVectorizer.vocabulary_))
+
+    if tfidf == True:
+
+        tfIdfTransformer = TfidfTransformer(sublinear_tf=True)
+
+        x_train = tfIdfTransformer.fit_transform(x_train)
+
+        return x_train, y
+    
+    return x_train, y
+
+def kfold(X,y, model_name:str = "logreg"):
+
+    skf = StratifiedKFold(n_splits=10, shuffle=True, random_state=seed)
+
+    f1 = []
+    split = 1
+
+    for train, test in skf.split(X,y):
+
+        print("Split: {}".format(split))
+        split += 1 
+
+        # Extract train and test
+        X_train = X[train]
+        X_test = X[test]
+        y_train = y[train]
+        y_test = y[test]
+
+        if model_name == "logreg":
+            model = LogisticRegression(n_jobs=-1)
+        else:
+            model = LinearSVC()
+
+        model.fit(X_train, y_train)
+
+        y_predicted_test = model.predict(X_test)
+
+        f1.append(f1_score(y_test, y_predicted_test, average="weighted"))
+
+    print("Avg F1: {}\n Individual runs: {}".format(np.mean(f1), f1))
+
 def train_eval(X_train, y_train, X_test, y_test):
 
     """
@@ -88,7 +161,7 @@ def train_eval(X_train, y_train, X_test, y_test):
     Classifier has been changed from LinearSVC to Logistic Regression
     """
 
-    classifier = LogisticRegression(n_jobs=-1)
+    classifier = LogisticRegression(n_jobs=-1, max_iter= 10000)
     #classifier = LinearSVC()
     #classifier = MLPClassifier(hidden_layer_sizes=(100, 32, 1), random_state=seed)
     
@@ -121,12 +194,9 @@ if __name__ == "__main__":
     X_train, y_train, dictvect, tfidf = load_file("data/train.tsv", word_gram=wg, char_gram=cg)
     X_dev, y_dev, _, _ = load_file("data/valid.tsv", dictvect, word_gram=wg, char_gram=cg)
 
-    X = hstack((X_train, X_dev))
-    #y = np.concatenate([y_train.todense(), y_dev.todense()])
+    X, y = load2Files("data/train.tsv", "data/valid.tsv")
 
-    print(X_train.shape, y_train.shape)
-    print(X_dev.shape, y_dev.shape)
-    print(X.shape)
+    kfold(X, y)
 
     #f1_test, acc_test, _ = train_eval(X_train, y_train, X_dev, y_dev)
     #print("weighted f1: {0:.1f}".format(f1_test * 100))
