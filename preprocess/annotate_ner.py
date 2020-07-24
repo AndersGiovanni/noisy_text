@@ -21,7 +21,10 @@ def get_entities(texts):
     texts = [normalize(text) for text in texts]
     for doc in nlp.pipe(texts, disable=["tagger","parser"]):
         #print([(ent.text, ent.label_, ent.start_char, ent.end_char) for ent in doc.ents])
-        return " ".join([ent.label_ for ent in doc.ents])
+        if doc.ents:
+            return " ".join([ent.label_ for ent in doc.ents])
+        else:
+            return "NO_ENTITIES"
         #for token in doc:
         #    print(token.text, token.pos_)
 
@@ -29,7 +32,11 @@ def get_entities_details(texts):
     texts = [normalize(text) for text in texts]
     for doc in nlp.pipe(texts, disable=["tagger","parser"]):
         ent_texts = ["/".join([ent.text.replace(" ","_"), ent.label_]) for ent in doc.ents]
-        return " ".join(ent_texts)
+        if doc.ents:
+            return " ".join(ent_texts)
+        else:
+            return "NO_ENTITIES"
+
 
 output = get_entities(["official death toll from #covid19 in the united kingdom is now greater than: germany + poland + switzerland + austria + portugal + greece + sweden + finland + norway + ireland... combined. uk: 67.5 million (233 dead) above group: 185 million (230 dead) httpurl"])
 print(output)

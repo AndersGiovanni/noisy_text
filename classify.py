@@ -43,6 +43,7 @@ def load_file(file, DictVect = False, tfidf = False, tfIdfTransformer = None, wo
     # Convert labels
     df["Label"] = df["Label"].apply(lambda x: encode_label(x))
 
+    #x = df["Entities"].values
     x = df["Text"].values
     y = df["Label"].values
 
@@ -117,10 +118,12 @@ if __name__ == "__main__":
 
     print(os.listdir("data/"))
 
-    train_data_path = "data/train_lower.tsv"
-    test_data_path = "data/valid_lower.tsv"
+    train_data_path = "data/train_lower_entities.tsv"
+    test_data_path = "data/valid_lower_entities.tsv"
     wg = "1-3"
     cg = "4"
+    # wg = "1"
+    # cg = "0"
     use_tfidf = True
 
     #classifier = LogisticRegression(n_jobs=-1, max_iter= 10000)
