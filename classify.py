@@ -13,7 +13,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import StratifiedKFold
-from sklearn.feature_extraction.text import CountVectorizer
 
 
 # Fix seed for replicability
@@ -87,25 +86,6 @@ def load_file(file, DictVect = False, tfidf = False, tfIdfTransformer = None, wo
             return x_test, y, DictVect, tfIdfTransformer
 
 
-from sklearn.base import BaseEstimator, TransformerMixin
-
-class AverageWordLengthExtractor(BaseEstimator, TransformerMixin):
-    """Takes in dataframe, extracts road name column, outputs average word length"""
-
-    def __init__(self):
-        pass
-
-    def average_word_length(self, name):
-        """Helper code to compute average word length of a name"""
-        return np.mean([len(word) for word in name.split()])
-
-    def transform(self, df, y=None):
-        """The workhorse of this feature extractor"""
-        return df['road_name'].apply(self.average_word_length)
-
-    def fit(self, df, y=None):
-        """Returns `self` unless something different happens in train and test"""
-        return self
 
 def train_eval(classifier, X_train, y_train, X_test, y_test):
 
