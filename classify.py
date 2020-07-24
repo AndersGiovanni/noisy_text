@@ -43,8 +43,10 @@ def load_file(file, DictVect = False, tfidf = False, tfIdfTransformer = None, wo
     # Convert labels
     df["Label"] = df["Label"].apply(lambda x: encode_label(x))
 
-    #x = df["Entities"].values
-    x = df["Text"].values
+    x = df["Entities"].values
+    x = df["Entities_Details"].values
+
+    #x = df["Text"].values
     y = df["Label"].values
 
     if DictVect == False:
@@ -122,8 +124,8 @@ if __name__ == "__main__":
     test_data_path = "data/valid_lower_entities.tsv"
     wg = "1-3"
     cg = "4"
-    # wg = "1"
-    # cg = "0"
+    wg = "1"
+    cg = "0"
     use_tfidf = True
 
     #classifier = LogisticRegression(n_jobs=-1, max_iter= 10000)

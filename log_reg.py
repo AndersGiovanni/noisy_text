@@ -198,6 +198,6 @@ if __name__ == "__main__":
 
     kfold(X, y)
 
-    #f1_test, acc_test, _ = train_eval(X_train, y_train, X_dev, y_dev)
-    #print("weighted f1: {0:.1f}".format(f1_test * 100))
-    #print("accuracy: {0:.1f}".format(acc_test * 100))
+    f1_test, acc_test, _ = train_eval(X_train, y_train, X_dev, y_dev)
+    print("weighted f1: {0:.1f}".format(f1_test * 100))
+    print("accuracy: {0:.1f}".format(acc_test * 100))
