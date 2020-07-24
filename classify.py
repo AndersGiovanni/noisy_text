@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     train_data_path = "data/train_lower.tsv"
     test_data_path = "data/valid_lower.tsv"
-    wg = "5"
+    wg = "1-3"
     cg = "4"
     use_tfidf = True
 
