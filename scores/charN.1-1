@@ -1,0 +1,21 @@
+['train.tsv', 'train_lower.tsv', 'train_lower_entities.tsv', 'valid.tsv', 'valid_lower.tsv', 'valid_lower_entities.tsv']
+LinearSVC()
+first instance as features: {'C:_o': 14, 'C:_f': 4, 'C:_i': 16, 'C:_c': 4, 'C:_a': 16, 'C:_l': 13, 'C:_ ': 44, 'C:_d': 14, 'C:_e': 17, 'C:_t': 11, 'C:_h': 4, 'C:_r': 12, 'C:_m': 6, 'C:_#': 1, 'C:_v': 2, 'C:_1': 2, 'C:_9': 1, 'C:_n': 16, 'C:_u': 6, 'C:_k': 2, 'C:_g': 6, 'C:_s': 4, 'C:_w': 4, 'C:_:': 3, 'C:_y': 2, 'C:_+': 9, 'C:_p': 4, 'C:_z': 1, 'C:_.': 5, 'C:_b': 2, 'C:_6': 1, 'C:_7': 1, 'C:_5': 2, 'C:_(': 2, 'C:_2': 2, 'C:_3': 3, 'C:_)': 2, 'C:_8': 1, 'C:_0': 1}
+Vocab size train:  594
+TfidfTransformer(sublinear_tf=True)
+Vocab size:  594
+[0 1]
+Classifier accuracy train: 74.64
+===== dev set ====
+Classifier: 62.10
+              precision    recall  f1-score   support
+
+           0     0.5928    0.9015    0.7153       528
+           1     0.7360    0.3072    0.4335       472
+
+    accuracy                         0.6210      1000
+   macro avg     0.6644    0.6044    0.5744      1000
+weighted avg     0.6604    0.6210    0.5823      1000
+
+weighted f1: 58.2
+accuracy: 62.1

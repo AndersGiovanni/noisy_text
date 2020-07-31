@@ -1,11 +1,14 @@
 __author__ = "AGMoller"
 
 from myutils import Featurizer, EmbedsFeaturizer, get_size_tuple, PREFIX_WORD_NGRAM, PREFIX_CHAR_NGRAM, TWEET_DELIMITER
-import pandas as pd
-from sklearn.metrics import accuracy_score, classification_report, f1_score
+
 import random
 import os
+import argparse
+
 import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score, classification_report, f1_score
 from scipy.sparse import hstack
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -27,7 +30,7 @@ def encode_label(label):
     if label == "UNINFORMATIVE": return 0
     else: return 1
 
-def load_file(file, DictVect = False, tfidf = False, tfIdfTransformer = None, word_gram:str = "5", char_gram:str = "4"):
+def load_file(file, DictVect = False, tfidf = False, tfIdfTransformer = None, word_gram:str = "0", char_gram:str = "0", wordpiece_gram:str = "0"):
     """
     Load file and transform into correct format adapted from https://github.com/bplank/bleaching-text/
     
@@ -46,14 +49,14 @@ def load_file(file, DictVect = False, tfidf = False, tfIdfTransformer = None, wo
     x = df["Entities"].values
     x = df["Entities_Details"].values
 
-    #x = df["Text"].values
+    x = df["Text"].values
     y = df["Label"].values
 
     if DictVect == False:
 
         dictVectorizer = DictVectorizer()
 
-        vectorizerWords = Featurizer(word_ngrams=word_gram, char_ngrams=char_gram, binary=False)
+        vectorizerWords = Featurizer(word_ngrams=word_gram, char_ngrams=char_gram, wordpiece_ngrams=wordpiece_gram, binary=False)
         x_dict = vectorizerWords.fit_transform(x)
         print("first instance as features:", x_dict[0])
         x_train = dictVectorizer.fit_transform(x_dict)
@@ -72,7 +75,7 @@ def load_file(file, DictVect = False, tfidf = False, tfIdfTransformer = None, wo
             return x_train, y, dictVectorizer, tfIdfTransformer
 
     else:
-        vectorizerWords = Featurizer(word_ngrams=word_gram, char_ngrams=char_gram)
+        vectorizerWords = Featurizer(word_ngrams=word_gram, char_ngrams=char_gram, wordpiece_ngrams=wordpiece_gram)
         x_dict = vectorizerWords.fit_transform(x)
         x_test = DictVect.transform(x_dict)
 
@@ -118,14 +121,19 @@ def train_eval(classifier, X_train, y_train, X_test, y_test):
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--wordN", default="1", type=str, help="Log dir name")
+    parser.add_argument("--charN", default="0", type=str, help="Log dir name")
+    parser.add_argument("--wpieceN", default="0", type=str, help="Log dir name")
+    args = parser.parse_args()
+
     print(os.listdir("data/"))
 
     train_data_path = "data/train_lower_entities.tsv"
     test_data_path = "data/valid_lower_entities.tsv"
-    wg = "1-3"
-    cg = "4"
-    wg = "1"
-    cg = "0"
+    wordN = args.wordN
+    charN = args.charN
+    wordpieceN = args.wpieceN
     use_tfidf = True
 
     #classifier = LogisticRegression(n_jobs=-1, max_iter= 10000)
@@ -134,9 +142,9 @@ if __name__ == "__main__":
                            fit_intercept=True, intercept_scaling=1, class_weight=None)
     # classifier = MLPClassifier(hidden_layer_sizes=(100, 32, 1), random_state=seed)
     print(classifier)
-    X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wg, char_gram=cg)
+    X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
     print(tfidfvect)
-    X_dev, y_dev, _, _ = load_file(test_data_path, DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wg, char_gram=cg)
+    X_dev, y_dev, _, _ = load_file(test_data_path, DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
 
     # X, y = load2Files("data/train.tsv", "data/valid.tsv")
 

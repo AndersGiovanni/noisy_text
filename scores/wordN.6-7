@@ -1,0 +1,21 @@
+['train.tsv', 'train_lower.tsv', 'train_lower_entities.tsv', 'valid.tsv', 'valid_lower.tsv', 'valid_lower_entities.tsv']
+LinearSVC()
+first instance as features: {'W:_official_death_toll_from_#covid19_in': 1, 'W:_death_toll_from_#covid19_in_the': 1, 'W:_toll_from_#covid19_in_the_united': 1, 'W:_from_#covid19_in_the_united_kingdom': 1, 'W:_#covid19_in_the_united_kingdom_is': 1, 'W:_in_the_united_kingdom_is_now': 1, 'W:_the_united_kingdom_is_now_greater': 1, 'W:_united_kingdom_is_now_greater_than:': 1, 'W:_kingdom_is_now_greater_than:_germany': 1, 'W:_is_now_greater_than:_germany_+': 1, 'W:_now_greater_than:_germany_+_poland': 1, 'W:_greater_than:_germany_+_poland_+': 1, 'W:_than:_germany_+_poland_+_switzerland': 1, 'W:_germany_+_poland_+_switzerland_+': 1, 'W:_+_poland_+_switzerland_+_austria': 1, 'W:_poland_+_switzerland_+_austria_+': 1, 'W:_+_switzerland_+_austria_+_portugal': 1, 'W:_switzerland_+_austria_+_portugal_+': 1, 'W:_+_austria_+_portugal_+_greece': 1, 'W:_austria_+_portugal_+_greece_+': 1, 'W:_+_portugal_+_greece_+_sweden': 1, 'W:_portugal_+_greece_+_sweden_+': 1, 'W:_+_greece_+_sweden_+_finland': 1, 'W:_greece_+_sweden_+_finland_+': 1, 'W:_+_sweden_+_finland_+_norway': 1, 'W:_sweden_+_finland_+_norway_+': 1, 'W:_+_finland_+_norway_+_ireland...': 1, 'W:_finland_+_norway_+_ireland..._combined.': 1, 'W:_+_norway_+_ireland..._combined._uk:': 1, 'W:_norway_+_ireland..._combined._uk:_67.5': 1, 'W:_+_ireland..._combined._uk:_67.5_million': 1, 'W:_ireland..._combined._uk:_67.5_million_(233': 1, 'W:_combined._uk:_67.5_million_(233_dead)': 1, 'W:_uk:_67.5_million_(233_dead)_above': 1, 'W:_67.5_million_(233_dead)_above_group:': 1, 'W:_million_(233_dead)_above_group:_185': 1, 'W:_(233_dead)_above_group:_185_million': 1, 'W:_dead)_above_group:_185_million_(230': 1, 'W:_above_group:_185_million_(230_dead)': 1, 'W:_group:_185_million_(230_dead)_httpurl': 1, 'W:_official_death_toll_from_#covid19_in_the': 1, 'W:_death_toll_from_#covid19_in_the_united': 1, 'W:_toll_from_#covid19_in_the_united_kingdom': 1, 'W:_from_#covid19_in_the_united_kingdom_is': 1, 'W:_#covid19_in_the_united_kingdom_is_now': 1, 'W:_in_the_united_kingdom_is_now_greater': 1, 'W:_the_united_kingdom_is_now_greater_than:': 1, 'W:_united_kingdom_is_now_greater_than:_germany': 1, 'W:_kingdom_is_now_greater_than:_germany_+': 1, 'W:_is_now_greater_than:_germany_+_poland': 1, 'W:_now_greater_than:_germany_+_poland_+': 1, 'W:_greater_than:_germany_+_poland_+_switzerland': 1, 'W:_than:_germany_+_poland_+_switzerland_+': 1, 'W:_germany_+_poland_+_switzerland_+_austria': 1, 'W:_+_poland_+_switzerland_+_austria_+': 1, 'W:_poland_+_switzerland_+_austria_+_portugal': 1, 'W:_+_switzerland_+_austria_+_portugal_+': 1, 'W:_switzerland_+_austria_+_portugal_+_greece': 1, 'W:_+_austria_+_portugal_+_greece_+': 1, 'W:_austria_+_portugal_+_greece_+_sweden': 1, 'W:_+_portugal_+_greece_+_sweden_+': 1, 'W:_portugal_+_greece_+_sweden_+_finland': 1, 'W:_+_greece_+_sweden_+_finland_+': 1, 'W:_greece_+_sweden_+_finland_+_norway': 1, 'W:_+_sweden_+_finland_+_norway_+': 1, 'W:_sweden_+_finland_+_norway_+_ireland...': 1, 'W:_+_finland_+_norway_+_ireland..._combined.': 1, 'W:_finland_+_norway_+_ireland..._combined._uk:': 1, 'W:_+_norway_+_ireland..._combined._uk:_67.5': 1, 'W:_norway_+_ireland..._combined._uk:_67.5_million': 1, 'W:_+_ireland..._combined._uk:_67.5_million_(233': 1, 'W:_ireland..._combined._uk:_67.5_million_(233_dead)': 1, 'W:_combined._uk:_67.5_million_(233_dead)_above': 1, 'W:_uk:_67.5_million_(233_dead)_above_group:': 1, 'W:_67.5_million_(233_dead)_above_group:_185': 1, 'W:_million_(233_dead)_above_group:_185_million': 1, 'W:_(233_dead)_above_group:_185_million_(230': 1, 'W:_dead)_above_group:_185_million_(230_dead)': 1, 'W:_above_group:_185_million_(230_dead)_httpurl': 1}
+Vocab size train:  421826
+TfidfTransformer(sublinear_tf=True)
+Vocab size:  421826
+[0 1]
+Classifier accuracy train: 100.00
+===== dev set ====
+Classifier: 56.60
+              precision    recall  f1-score   support
+
+           0     0.5495    0.9886    0.7064       528
+           1     0.8800    0.0932    0.1686       472
+
+    accuracy                         0.5660      1000
+   macro avg     0.7147    0.5409    0.4375      1000
+weighted avg     0.7055    0.5660    0.4525      1000
+
+weighted f1: 45.3
+accuracy: 56.6

@@ -5,9 +5,11 @@ import nltk
 from sklearn.base import TransformerMixin
 import numpy as np
 import json
+from transformers import BertTokenizer
 
 PREFIX_WORD_NGRAM="W:"
 PREFIX_CHAR_NGRAM="C:"
+PREFIX_WORDPIECE_NGRAM="WP:"
 TWEET_DELIMITER = " NEWLINE "
 
 
@@ -92,7 +94,7 @@ class Featurizer(TransformerMixin):
         out= [self._ngrams(tweets) for tweets in X]
         return out
 
-    def __init__(self,word_ngrams="1",char_ngrams="0",binary=True,rm_user_url=False):
+    def __init__(self,word_ngrams="1",char_ngrams="0",wordpiece_ngrams="0",binary=True,rm_user_url=False):
         """
         binary: whether to use 1/0 values or counts
         lowercase: convert text to lowercase
@@ -102,8 +104,11 @@ class Featurizer(TransformerMixin):
         self.binary=binary
         self.word_ngram_size = get_size_tuple(word_ngrams)
         self.char_ngram_size = get_size_tuple(char_ngrams)
+        self.wordpiece_ngram_size = get_size_tuple(wordpiece_ngrams)
 
         self.rm_user_url=rm_user_url
+        if self.wordpiece_ngram_size != '0':
+            self.wordpiece_tokenizer = BertTokenizer('ml-bert.vocab.txt', do_lower_case=False)
 
 
     def _ngrams(self,tweets):
@@ -157,6 +162,25 @@ class Featurizer(TransformerMixin):
                             d[gram] = 1  # binary
                         else:
                             d[gram] = d.get(gram, 0) + 1
+
+        wp_lower, wp_upper = self.wordpiece_ngram_size
+        if wp_lower != 0:
+            # Rob: I swapped the order of 'n in range' and 'tweet in tweets'
+            # for efficiency reasons, now we only have to tokenize once
+            for tweet in tweets:
+                tok = self.wordpiece_tokenizer.tokenize(tweet)
+                if self.rm_user_url:
+                    tweet = tweet.replace("USER", "")
+                    tweet = tweet.replace("URL", "")
+
+                for n in range(wp_lower, wp_upper + 1):
+                    ## wordpiece n-grams
+                    for gram in nltk.ngrams(tok, n):
+                        gram = "{}_{}".format(PREFIX_WORDPIECE_NGRAM, "_".join(gram))
+                        if self.binary:
+                            d[gram] = 1 #binary
+                        else:
+                            d[gram] = d.get(gram,0)+1
 
         return d
 
