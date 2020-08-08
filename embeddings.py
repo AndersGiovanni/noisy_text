@@ -111,7 +111,7 @@ if __name__ == "__main__":
     model = makeModel(vocab_length, embedding_matrix.shape[1], embedding_matrix, input_dim)
     print("Model made")
 
-    model.fit(X_train, y_train, epochs=50, verbose=0)
+    model.fit(X_train, y_train, epochs=20, verbose=1)
     print("Training done")
 
     loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
