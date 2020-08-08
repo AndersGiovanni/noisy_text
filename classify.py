@@ -14,6 +14,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import StratifiedKFold
 
@@ -46,9 +47,9 @@ def load_file(file, DictVect = False, tfidf = False, tfIdfTransformer = None, wo
     # Convert labels
     df["Label"] = df["Label"].apply(lambda x: encode_label(x))
 
-    x = df["Entities"].values
-    x = df["Entities_Details"].values
-
+    #x = df["Entities"].values
+    #x = df["Entities_Details"].values
+    #x = df[["Text","Entities"]].values
     x = df["Text"].values
     y = df["Label"].values
 
@@ -130,7 +131,9 @@ if __name__ == "__main__":
     print(os.listdir("data/"))
 
     train_data_path = "data/train_lower_entities.tsv"
+    #train_data_path = "data/train.tsv"
     test_data_path = "data/valid_lower_entities.tsv"
+    #test_data_path = "data/valid.tsv"
     wordN = args.wordN
     charN = args.charN
     wordpieceN = args.wpieceN
@@ -141,6 +144,7 @@ if __name__ == "__main__":
                            dual=True, tol=0.0001, C=1.0, multi_class='ovr', \
                            fit_intercept=True, intercept_scaling=1, class_weight=None)
     # classifier = MLPClassifier(hidden_layer_sizes=(100, 32, 1), random_state=seed)
+    #classifier = RandomForestClassifier(n_jobs=-1)
     print(classifier)
     X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
     print(tfidfvect)
