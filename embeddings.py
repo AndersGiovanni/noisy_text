@@ -26,7 +26,7 @@ seed=103
 random.seed(seed)
 np.random.seed(seed)
 
-def fileLoadPrep(file, embedding_file):
+def fileLoadPrep(file, embedding_file, word_tokenizer = False, length_median = False):
     """
     Load file and prepare data based on GloVe embeddings. 
     Tutorial followed: https://stackabuse.com/python-for-nlp-word-embeddings-for-deep-learning-in-keras/
@@ -37,21 +37,22 @@ def fileLoadPrep(file, embedding_file):
     
     y = df["Label"]
 
-    # Define and fit word tokenizer
-    word_tokenizer = tf.keras.preprocessing.text.Tokenizer()
-    word_tokenizer.fit_on_texts(df["Text"].values)
+    if word_tokenizer == False:
+        # Define and fit word tokenizer
+        word_tokenizer = tf.keras.preprocessing.text.Tokenizer()
+        word_tokenizer.fit_on_texts(df["Text"].values)
+        embedded_sentences = word_tokenizer.texts_to_sequences(df["Text"].values)
+    else:
+    # Embed sentences
+        embedded_sentences = word_tokenizer.texts_to_sequences(df["Text"].values)
 
     # Vocab length
     vocab_length = len(word_tokenizer.word_index) + 1
 
-    # Embed sentences
-    embedded_sentences = word_tokenizer.texts_to_sequences(df["Text"].values)
-
     # Find max/mean/median tweet length
-    word_count = lambda sentence: len(word_tokenize(sentence))
-    longest_sentence = max(df["Text"].values, key=word_count)
-    length_long_sentence = len(word_tokenize(longest_sentence))
-    length_median = int(np.median([word_count(i) for i in df["Text"].values]))
+    if length_median == False:
+        word_count = lambda sentence: len(word_tokenize(sentence))
+        length_median = int(np.median([word_count(i) for i in df["Text"].values]))
 
     # Pad sentences
     X = tf.keras.preprocessing.sequence.pad_sequences(embedded_sentences, length_median, padding='post')
@@ -66,7 +67,7 @@ def fileLoadPrep(file, embedding_file):
         embeddings_dictionary [word] = vector_dimensions
     glove_file.close()
 
-    embedding_matrix = np.zeros((vocab_length, 100))
+    embedding_matrix = np.zeros((vocab_length, 200))
     for word, index in word_tokenizer.word_index.items():
         embedding_vector = embeddings_dictionary.get(word)
         if embedding_vector is not None:
@@ -74,17 +75,19 @@ def fileLoadPrep(file, embedding_file):
 
     print("Done")
 
-    return X, y, embedding_matrix, vocab_length, length_median
+    return X, y, embedding_matrix, vocab_length, length_median, word_tokenizer
 
 
 def makeModel(vocab_length, embedding_dim, embedding_matrix, input_dim):
     model = tf.keras.Sequential()
     embedding_layer = tf.keras.layers.Embedding(vocab_length, embedding_dim, weights=[embedding_matrix], input_length=input_dim, trainable=False)
     model.add(embedding_layer)
+    model.add(tf.keras.layers.Dense(1024, activation="relu"))
+    model.add(tf.keras.layers.Dropout(0.5))
     model.add(tf.keras.layers.Flatten())
     model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['acc'])
+    model.compile(optimizer='adagrad', loss='binary_crossentropy', metrics=['acc'])
 
     return model
 
@@ -99,11 +102,17 @@ if __name__ == "__main__":
     test_data_path = "data/valid_lower_entities.tsv"
     embedding_file = args.embedFile
 
-    X, y, embedding_matrix, vocab_length, input_dim = fileLoadPrep(train_data_path, embedding_file)
+    X_train, y_train, embedding_matrix, vocab_length, input_dim, word_tokenizer = fileLoadPrep(train_data_path, embedding_file)
+    print("Training loaded")
+
+    X_test, y_test, _, _, _, _ = fileLoadPrep(test_data_path, embedding_file, word_tokenizer, input_dim)
+    print("Test loaded")
 
     model = makeModel(vocab_length, embedding_matrix.shape[1], embedding_matrix, input_dim)
+    print("Model made")
 
-    model.fit(X, y, epochs=100, verbose=1)
+    model.fit(X_train, y_train, epochs=50, verbose=0)
+    print("Training done")
 
-    loss, accuracy = model.evaluate(X, y, verbose=0)
+    loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
     print('Accuracy: %f' % (accuracy*100))
