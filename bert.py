@@ -17,7 +17,7 @@ from sklearn.metrics import accuracy_score, classification_report, f1_score
 import tensorflow as tf
 import torch
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
-from transformers import BertTokenizer, BertForSequenceClassification, AdamW, BertConfig, get_linear_schedule_with_warmup
+from transformers import BertTokenizer, BertForSequenceClassification, AdamW, BertConfig, get_linear_schedule_with_warmup, AutoTokenizer, AutoModel
 from tqdm import tqdm
 
 from classify import encode_label
@@ -39,15 +39,16 @@ def loadFile(file):
     y = df.Label
 
     # Define tokenizer
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case = True)
+    #tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case = True)
+    tokenizer = AutoTokenizer.from_pretrained('digitalepidemiologylab/covid-twitter-bert')
 
     # Encode sentences to ids
     input_ids = list()
     for sent in tqdm(X):
         encoded_sent = tokenizer.encode(sent, 
                                         add_special_tokens = True,
-                                        truncation = True) 
-                                        #max_length = 128, 
+                                        truncation = True,
+                                        max_length = 128) 
                                         #return_tensors = 'pt')
 
         input_ids.append(encoded_sent)
@@ -89,6 +90,31 @@ def flat_accuracy(preds, labels):
     labels_flat = labels.flatten()
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
+def f1(y_true:torch.Tensor, y_pred:torch.Tensor, is_training=False) -> torch.Tensor:
+    '''Calculate F1 score. 
+    Reference: https://gist.github.com/SuperShinyEyes/dcc68a08ff8b615442e3bc6a9b55a354
+    '''
+    assert y_true.ndim == 1
+    assert y_pred.ndim == 1 or y_pred.ndim == 2
+    
+    if y_pred.ndim == 2:
+        y_pred = y_pred.argmax(dim=1)
+        
+    
+    tp = (y_true * y_pred).sum().to(torch.float32)
+    tn = ((1 - y_true) * (1 - y_pred)).sum().to(torch.float32)
+    fp = ((1 - y_true) * y_pred).sum().to(torch.float32)
+    fn = (y_true * (1 - y_pred)).sum().to(torch.float32)
+    
+    epsilon = 1e-7
+    
+    precision = tp / (tp + fp + epsilon)
+    recall = tp / (tp + fn + epsilon)
+    
+    f1 = 2* (precision*recall) / (precision + recall + epsilon)
+    f1.requires_grad = is_training
+    return f1
+
 def format_time(elapsed):
     '''
     Takes a time in seconds and returns a string hh:mm:ss
@@ -114,10 +140,17 @@ if __name__ == "__main__":
     train = makeDataLoader(X_train, y_train, mask_train)
     test = makeDataLoader(X_test, y_test, mask_test)
 
-    model = BertForSequenceClassification.from_pretrained('bert-base-uncased',
-                                                            num_labels = 2,
-                                                            output_attentions = False,
-                                                            output_hidden_states = False)
+    #model = BertForSequenceClassification.from_pretrained('bert-base-uncased',
+    #                                                        num_labels = 2,
+    #                                                        output_attentions = False,
+    #                                                        output_hidden_states = False)
+
+    model = BertForSequenceClassification.from_pretrained('digitalepidemiologylab/covid-twitter-bert',
+                                                        num_labels = 2,
+                                                        output_attentions = False,
+                                                        output_hidden_states = False)
+
+    #model = AutoModel.from_pretrained()
 
     optimizer = AdamW(model.parameters(),
                         lr = 2e-5,
@@ -279,16 +312,19 @@ if __name__ == "__main__":
             label_ids = b_labels.to('cpu').numpy()
             
             # Calculate the accuracy for this batch of test sentences.
-            tmp_eval_accuracy = flat_accuracy(logits, label_ids)
+            tmp_eval_accuracy = flat_accuracy(logits, label_ids)   # acc
+            tmp_eval_f1 = f1(logits, label_ids)                     # f1
             
             # Accumulate the total accuracy.
             eval_accuracy += tmp_eval_accuracy
+            eval_f1 += tmp_eval_f1
 
             # Track the number of batches
             nb_eval_steps += 1
 
         # Report the final accuracy for this validation run.
         print("  Accuracy: {0:.2f}".format(eval_accuracy/nb_eval_steps))
+        print("  F1: {0:.2f}".format(eval_f1/nb_eval_steps))
         print("  Validation took: {:}".format(format_time(time.time() - t0)))
 
     print("")
