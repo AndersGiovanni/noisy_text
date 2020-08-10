@@ -76,7 +76,7 @@ def makeDataLoader(X, y, attention_masks):
     """
     Make PyTorch iterator
     """
-    batch_size = 32
+    batch_size = 16
 
     data = TensorDataset(X, attention_masks, y)
     sampler = RandomSampler(data)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
                         lr = 2e-5,
                         eps = 1e-8)
 
-    epochs = 4
+    epochs = 2
 
     total_steps = len(train) * epochs
 
