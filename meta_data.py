@@ -40,9 +40,14 @@ if __name__ == "__main__":
                       access_token_key=ACCESS_TOKEN,
                       access_token_secret=ACCESS_TOKEN_SECRET)
 
-    tweet = api.GetStatus(tid).AsDict()
+    df = pd.read_csv(train_data_path, sep='\t')
 
-    print(tweet["user"])
+    print(df.head())
+
+    #tweet = api.GetStatus(tid).AsDict()
+
+    #for key, value in tweet.items():
+    #        print("{}: {}".format(key, value))
 
     #df = pd.read_csv(train_data_path, sep='\t')
     #print(df.head(1))
