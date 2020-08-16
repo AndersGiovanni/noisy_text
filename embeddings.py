@@ -84,6 +84,7 @@ def makeModel(vocab_length, embedding_dim, embedding_matrix, input_dim):
     model.add(embedding_layer)
     model.add(tf.keras.layers.Dense(1024, activation="relu"))
     model.add(tf.keras.layers.Dropout(0.5))
+    model.add(tf.keras.layers.Dense(512, activation = "relu"))
     model.add(tf.keras.layers.Flatten())
     model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
