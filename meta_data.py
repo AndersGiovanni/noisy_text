@@ -9,31 +9,31 @@ import twitter
 import pandas as pd
 import time
 from tqdm import tqdm
+import sys
+from collections import Counter
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser("Example: Accessing the Twitter Streaming API")
-    #parser.add_argument('--credentials','-c', help="user credentials (required)",required=True)
-    parser.add_argument('--count', help="number of tweets", default=10)
+    parser.add_argument("--file", "-f", help="Input file")
+    parser.add_argument("--credentials", "-c", help="Please input credential file (json format)", required=True)
 
     args = parser.parse_args()
 
     ## Load your credentials
-    credentials = { 
-            "CONSUMER_KEY": "Bxa9UfGV4K8BGN2aBPCGNFycM",
-            "CONSUMER_SECRET": "2OjnpCajULYmNhcWBpzTpURJoRouwZZJlNWXoLLbA1u48DyFzN",
-            "ACCESS_TOKEN": "1593686437-rr9z6o1P7rjJVcT5blLN28rWpntJkDLxFRJaYgC",
-            "ACCESS_TOKEN_SECRET": "GeplRnQMX5crruq7NkyAhoPGorAniprluiqyFxLSENMp6",
-    }
+    with open(args.credentials) as json_file:
+        credentials = json.load(json_file)
 
     CONSUMER_KEY=credentials["CONSUMER_KEY"]
     CONSUMER_SECRET=credentials["CONSUMER_SECRET"]
     ACCESS_TOKEN=credentials["ACCESS_TOKEN"]
     ACCESS_TOKEN_SECRET=credentials["ACCESS_TOKEN_SECRET"]
 
-    tid = "1241490299215634434"
+    output_file = args.file[:-4].__add__("_meta.tsv")
 
-    train_data_path = "data/train_lower_entities.tsv"
+    #sys.exit()
+
+    file_ = args.file
 
     api = twitter.Api()
 
@@ -42,13 +42,9 @@ if __name__ == "__main__":
                       access_token_key=ACCESS_TOKEN,
                       access_token_secret=ACCESS_TOKEN_SECRET)
 
-    df = pd.read_csv(train_data_path, sep='\t')
-
-    #print(df.head())
+    df = pd.read_csv(file_, sep='\t')
 
     twitter_ids = df.Id.values
-
-    #print(str(df["Text"].loc[df['Id'] == 1242799513619664896]))
 
     meta_dict = {
             "Id":list(),
@@ -64,14 +60,12 @@ if __name__ == "__main__":
 
 
     for idx, tweet in tqdm(enumerate(twitter_ids)):
-        if idx % 500:
-                time.sleep(900)
+        if (idx+1)%600 == 0:
                 print("Sleeping")
+                time.sleep(900)
         
         try:
-            #print(tweet)
             user = api.GetStatus(str(tweet)).AsDict()
-            #print(user["user"])
             
             meta_dict['Id'].append(tweet)
             meta_dict["screen_name"].append(user["user"]["screen_name"])
@@ -88,15 +82,22 @@ if __name__ == "__main__":
             except:
                 meta_dict["favourites_count"].append(0)
 
-            meta_dict["followers_count"].append(user["user"]["followers_count"])
-            
+            # If a user has 0 followers
+            try:
+                meta_dict["followers_count"].append(user["user"]["followers_count"])
+            except:
+                meta_dict["followers_count"].append(0)
+
             # If an account doesn't follow any other users
             try:
                 meta_dict["following_count"].append(user["user"]["friends_count"])
             except:
                 meta_dict["following_count"].append(0)
 
-            #meta_dict["statuses_count"].append(user["user"]["statuses_count"])
+            try:
+                meta_dict["statuses_count"].append(user["user"]["statuses_count"])
+            except:
+                meta_dict["statuses_count"].append(0)
 
         # If tweet id has changed/deleted
         except Exception as e:
@@ -110,12 +111,11 @@ if __name__ == "__main__":
             error_messages.append(e)             
             print(e)
             
+    meta_df = pd.DataFrame(meta_dict)
 
+    final_df = pd.merge(df,meta_df, on="Id")
 
-    #tweet = api.GetStatus(tid).AsDict()
+    print("Original df: {}, Meta df: {}, Final df: {}".format(len(df), len(meta_df), len(final_df)))
+    print(Counter(error_messages))
 
-    #for key, value in tweet.items():
-    #        print("{}: {}".format(key, value))
-
-    #df = pd.read_csv(train_data_path, sep='\t')
-    #print(df.head(1))
+    final_df.to_csv(output_file, sep="\t", index=False)
