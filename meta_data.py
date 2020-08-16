@@ -7,6 +7,8 @@ import argparse
 import json
 import twitter
 import pandas as pd
+import time
+from tqdm import tqdm
 
 if __name__ == "__main__":
 
@@ -42,7 +44,73 @@ if __name__ == "__main__":
 
     df = pd.read_csv(train_data_path, sep='\t')
 
-    print(df.head())
+    #print(df.head())
+
+    twitter_ids = df.Id.values
+
+    #print(str(df["Text"].loc[df['Id'] == 1242799513619664896]))
+
+    meta_dict = {
+            "Id":list(),
+            "screen_name":list(),
+            "description":list(),
+            "favourites_count":list(),
+            "followers_count":list(),
+            "following_count":list(),
+            "statuses_count":list()
+    }
+
+    error_messages = list()
+
+
+    for idx, tweet in tqdm(enumerate(twitter_ids)):
+        if idx % 500:
+                time.sleep(900)
+                print("Sleeping")
+        
+        try:
+            #print(tweet)
+            user = api.GetStatus(str(tweet)).AsDict()
+            #print(user["user"])
+            
+            meta_dict['Id'].append(tweet)
+            meta_dict["screen_name"].append(user["user"]["screen_name"])
+
+            # Empty description
+            try:
+                meta_dict["description"].append(user["user"]["description"])
+            except:
+                meta_dict["description"].append(" ")
+            
+            # If a user doens't have any favourites
+            try:
+                meta_dict["favourites_count"].append(user["user"]["favourites_count"])
+            except:
+                meta_dict["favourites_count"].append(0)
+
+            meta_dict["followers_count"].append(user["user"]["followers_count"])
+            
+            # If an account doesn't follow any other users
+            try:
+                meta_dict["following_count"].append(user["user"]["friends_count"])
+            except:
+                meta_dict["following_count"].append(0)
+
+            #meta_dict["statuses_count"].append(user["user"]["statuses_count"])
+
+        # If tweet id has changed/deleted
+        except Exception as e:
+            meta_dict['Id'].append(tweet)
+            meta_dict["screen_name"].append("__UNK_Screen_Name__")
+            meta_dict["description"].append("__UNK_Description__")
+            meta_dict["favourites_count"].append(0)
+            meta_dict["followers_count"].append(0)
+            meta_dict["following_count"].append(0)
+            meta_dict["statuses_count"].append(0)
+            error_messages.append(e)             
+            print(e)
+            
+
 
     #tweet = api.GetStatus(tid).AsDict()
 
