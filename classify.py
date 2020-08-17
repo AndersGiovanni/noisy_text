@@ -49,7 +49,7 @@ def load_file(file, feat, DictVect = False, tfidf = False, tfIdfTransformer = No
 
     # Convert labels
     df["Label"] = df["Label"].apply(lambda x: encode_label(x))
-    df1 = df[["Text", "Entities_Details", "Entities","Label"]]
+    df1 = df[["Text","Entities_Details", "description", "screen_name","Label"]]
     df1["Combined"] = df1[df1.columns[:-1]].apply(lambda x: ' __NEW_FEATURE__ '.join(x.dropna().astype(str)),axis=1)
     #x = df["Entities"].values
     #x = df["Entities_Details"].values
@@ -117,11 +117,11 @@ def train_eval(classifier, X_train, y_train, X_test, y_test, ensemble = False):
 
     accuracy_dev = accuracy_score(y_test, y_predicted_test)
     accuracy_train = accuracy_score(y_train, y_predicted_train)
-    print("Classifier accuracy train: {0:.2f}".format(accuracy_train*100))
+    print("Classifier accuracy train: {0:.5f}".format(accuracy_train*100))
 
     print("===== dev set ====")
     #print("Classifier: {0:.3f}".format(accuracy_dev*100))
-    print("Classifier: {0:.3f}".format(f1_score(y_test, y_predicted_test, average="weighted")*100))
+    #print("Classifier: {0:.3f}".format(f1_score(y_test, y_predicted_test, average="weighted")*100))
 
     #print(classification_report(y_test, y_predicted_test, digits=4))
 
@@ -161,9 +161,9 @@ if __name__ == "__main__":
 
     #print(os.listdir("data/"))
 
-    train_data_path = "data/train_lower_entities.tsv"
+    train_data_path = "data/train_lower_entities_meta.tsv"
     #train_data_path = "data/train.tsv"
-    test_data_path = "data/valid_lower_entities.tsv"
+    test_data_path = "data/valid_lower_entities_meta.tsv"
     #test_data_path = "data/valid.tsv"
     wordN = args.wordN
     charN = args.charN
@@ -174,34 +174,28 @@ if __name__ == "__main__":
                            dual=True, tol=0.0001, C=1.0, multi_class='ovr', \
                            fit_intercept=True, intercept_scaling=1, class_weight=None)
 
-    # X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Text", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    # X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Text", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "description", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    X_dev, y_dev, _, _ = load_file(test_data_path, feat = "description", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
 
     # X, y = load2Files("data/train.tsv", "data/valid.tsv")
 
 #    kfold(X, y)
 
-    # f1_test, acc_test, _ = train_eval(classifier, X_train, y_train, X_dev, y_dev)
-    # print("weighted f1: {0:.5f}".format(f1_test))
-    # print("accuracy: {0:.5f}".format(acc_test))
+    f1_test, acc_test, _ = train_eval(classifier, X_train, y_train, X_dev, y_dev)
+    print("weighted f1: {0:.5f}".format(f1_test))
+    print("accuracy: {0:.5f}".format(acc_test))
 
     # Ensemble
-    X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Text", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Text", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    pred1 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
+    #X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Text", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    #X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Text", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    #pred1 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
 
-    print('1 done')
+    #X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Entities", tfidf=use_tfidf, tfIdfTransformer=None, word_gram='1-4')
+    #X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Entities", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram='1-4')
+    #pred2 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
 
-    X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Entities", tfidf=use_tfidf, tfIdfTransformer=None, word_gram='1-4')
-    X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Entities", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram='1-4')
-    pred2 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
+    #X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Entities_Details", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    #X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Entities_Details", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    #pred3 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
 
-    print('2 done')
-
-    X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Entities_Details", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Entities_Details", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    pred3 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
-
-    print('3 done')
-
-    majorityVote(pred1, pred2, pred3, y_dev)
+    #majorityVote(pred1, pred2, pred3, y_dev)
