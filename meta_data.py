@@ -42,7 +42,7 @@ if __name__ == "__main__":
                       access_token_key=ACCESS_TOKEN,
                       access_token_secret=ACCESS_TOKEN_SECRET)
 
-    df = pd.read_csv(file_, sep='\t')
+    df = pd.read_csv(file_, sep='\t', header = None, names=["Id","Text"])
 
     twitter_ids = df.Id.values
 
@@ -60,11 +60,12 @@ if __name__ == "__main__":
 
 
     for idx, tweet in tqdm(enumerate(twitter_ids)):
-        if (idx+1)%600 == 0:
-                print("Sleeping")
-                time.sleep(900)
         
         try:
+            api = twitter.Api(consumer_key=CONSUMER_KEY,
+                            consumer_secret=CONSUMER_SECRET,
+                            access_token_key=ACCESS_TOKEN,
+                            access_token_secret=ACCESS_TOKEN_SECRET)
             user = api.GetStatus(str(tweet)).AsDict()
             
             meta_dict['Id'].append(tweet)
@@ -110,12 +111,16 @@ if __name__ == "__main__":
             meta_dict["statuses_count"].append(0)
             error_messages.append(e)             
             print(e)
+
+        if (idx+1)%600 == 0:
+            print("Sleeping")
+            time.sleep(900)
             
     meta_df = pd.DataFrame(meta_dict)
 
     final_df = pd.merge(df,meta_df, on="Id")
 
     print("Original df: {}, Meta df: {}, Final df: {}".format(len(df), len(meta_df), len(final_df)))
-    print(Counter(error_messages))
+    print(error_messages)
 
     final_df.to_csv(output_file, sep="\t", index=False)
