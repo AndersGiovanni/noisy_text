@@ -49,7 +49,7 @@ def load_file(file, feat, DictVect = False, tfidf = False, tfIdfTransformer = No
 
     # Convert labels
     df["Label"] = df["Label"].apply(lambda x: encode_label(x))
-    df1 = df[["Text","Entities_Details", "description", "screen_name","Label"]]
+    df1 = df[["Text", "description","Label"]]
     df1["Combined"] = df1[df1.columns[:-1]].apply(lambda x: ' __NEW_FEATURE__ '.join(x.dropna().astype(str)),axis=1)
     #x = df["Entities"].values
     #x = df["Entities_Details"].values
@@ -58,6 +58,7 @@ def load_file(file, feat, DictVect = False, tfidf = False, tfIdfTransformer = No
     #print("Hej ", df1["Combined"][1])
 
     x = df1[feat].values
+    #x = df.Text
     y = df["Label"].values
 
     if DictVect == False:
@@ -174,8 +175,8 @@ if __name__ == "__main__":
                            dual=True, tol=0.0001, C=1.0, multi_class='ovr', \
                            fit_intercept=True, intercept_scaling=1, class_weight=None)
 
-    X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "description", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    X_dev, y_dev, _, _ = load_file(test_data_path, feat = "description", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Combined", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Combined", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
 
     # X, y = load2Files("data/train.tsv", "data/valid.tsv")
 
