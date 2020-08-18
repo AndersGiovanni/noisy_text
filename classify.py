@@ -132,27 +132,6 @@ def train_eval(classifier, X_train, y_train, X_test, y_test, ensemble = False):
 
     return f1_score(y_test, y_predicted_test, average="weighted"), accuracy_score(y_test, y_predicted_test), y_predicted_test
 
-def majorityVote(list1, list2, list3, y_test):
-    votes = list()
-    for i in range(len(list1)):
-        class_0 = 0
-        class_1 = 0
-
-        if list1[i] == 0: class_0 += 1
-        else: class_1 += 1
-
-        if list2[i] == 0: class_0 += 1
-        else: class_1 += 1
-
-        if list3[i] == 0: class_0 += 1
-        else: class_1 += 1
-
-        if class_0 > class_1: votes.append(0)
-        else: votes.append(1)
-    
-    print("F1: {}, Acc: {}".format(f1_score(y_test, votes, average="weighted"), accuracy_score(y_test, votes)))
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -163,9 +142,9 @@ if __name__ == "__main__":
 
     #print(os.listdir("data/"))
 
-    train_data_path = "data/train_lower_entities_meta.tsv"
+    train_data_path = "data/train_lower_entities.tsv"
     #train_data_path = "data/train.tsv"
-    test_data_path = "data/valid_lower_entities_meta.tsv"
+    test_data_path = "data/valid_lower_entities.tsv"
     #test_data_path = "data/valid.tsv"
     wordN = args.wordN
     charN = args.charN
@@ -176,43 +155,13 @@ if __name__ == "__main__":
     X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Combined", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
 
 
-    clf1 = LinearSVC(penalty='l2', loss='squared_hinge', \
+    classifier = LinearSVC(penalty='l2', loss='squared_hinge', \
                            dual=True, tol=0.0001, C=1.0, multi_class='ovr', \
                            fit_intercept=True, intercept_scaling=1, class_weight=None)
 
-    clf2 = LogisticRegression()
 
-    clf3 = DecisionTreeClassifier()
-
-    clf4 = RandomForestClassifier()
-
-    #clf5 = MLPClassifier()
-
-    classifier = VotingClassifier(estimators=[
-                            ('SVM', clf1), 
-                            ('LogReg', clf2), 
-                            #('gnb', clf3),
-                            ('rfc', clf4)],
-                            #('mlp', clf5)], 
-                            voting='hard',
-                            n_jobs=-1)
-
-
-    f1_test, acc_test, _ = train_eval(classifier, X_train, y_train, X_dev, y_dev)
+    f1_test, acc_test, y_preds = train_eval(classifier, X_train, y_train, X_dev, y_dev)
     print("weighted f1: {0:.5f}".format(f1_test))
     print("accuracy: {0:.5f}".format(acc_test))
 
-    # Ensemble
-    #X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Text", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    #X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Text", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    #pred1 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
-
-    #X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Entities", tfidf=use_tfidf, tfIdfTransformer=None, word_gram='1-4')
-    #X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Entities", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram='1-4')
-    #pred2 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
-
-    #X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Entities_Details", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    #X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Entities_Details", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    #pred3 = train_eval(classifier, X_train, y_train, X_dev, y_dev, ensemble = True)
-
-    #majorityVote(pred1, pred2, pred3, y_dev)
+    np.save("SVM_preds.npy", y_preds)
