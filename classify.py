@@ -19,6 +19,9 @@ from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.svm import LinearSVC, SVC
 from sklearn.model_selection import StratifiedKFold
 from sklearn.tree import DecisionTreeClassifier
+# Tensorflow
+import tensorflow as tf
+from tensorflow.keras import layers, models, preprocessing, regularizers
 
 
 # Fix seed for replicability
@@ -102,7 +105,6 @@ def load_file(file, feat, DictVect = False, tfidf = False, tfIdfTransformer = No
             return x_test, y, DictVect, tfIdfTransformer
 
 
-
 def train_eval(classifier, X_train, y_train, X_test, y_test, ensemble = False):
 
     """
@@ -112,7 +114,10 @@ def train_eval(classifier, X_train, y_train, X_test, y_test, ensemble = False):
 
     print()
 
-    classifier.fit(X_train, y_train)
+    classifier.fit(X_train, y_train,
+                    epochs = 10,
+                    batch_size = 32,
+                    verbose = 1)
 
     y_predicted_test = classifier.predict(X_test)
     y_predicted_train = classifier.predict(X_train)
@@ -160,8 +165,7 @@ if __name__ == "__main__":
                            fit_intercept=True, intercept_scaling=1, class_weight=None)
 
 
+
     f1_test, acc_test, y_preds = train_eval(classifier, X_train, y_train, X_dev, y_dev)
     print("weighted f1: {0:.5f}".format(f1_test))
     print("accuracy: {0:.5f}".format(acc_test))
-
-    np.save("SVM_preds.npy", y_preds)

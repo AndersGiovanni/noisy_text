@@ -112,8 +112,14 @@ if __name__ == "__main__":
     model = makeModel(vocab_length, embedding_matrix.shape[1], embedding_matrix, input_dim)
     print("Model made")
 
-    model.fit(X_train, y_train, epochs=20, verbose=1)
+    model.fit(X_train, y_train, epochs=50, verbose=1)
     print("Training done")
+
+    preds = model.predict(X_test)
+    np.save("MLP_preds_proba.npy",preds)
+    preds = np.array([0 if i < 0.5 else 1 for i in preds])
+    np.save("MLP_preds.npy",preds)
+    #print(preds[:20])
 
     loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
     print('Accuracy: %f' % (accuracy*100))
