@@ -36,7 +36,7 @@ def encode_label(label):
     if label == "UNINFORMATIVE": return 0
     else: return 1
 
-def load_file(file, feat, DictVect = False, tfidf = False, tfIdfTransformer = None, word_gram:str = "0", char_gram:str = "0", wordpiece_gram:str = "0"):
+def load_file(file, feat, DictVect = False, tfidf = False, tfIdfTransformer = None, word_gram:str = "0", char_gram:str = "0", wordpiece_gram:str = "0", ttt = False):
     """
     Load file and transform into correct format adapted from https://github.com/bplank/bleaching-text/
     
@@ -52,8 +52,14 @@ def load_file(file, feat, DictVect = False, tfidf = False, tfIdfTransformer = No
     #print(df.info())
 
     # Convert labels
-    df["Label"] = df["Label"].apply(lambda x: encode_label(x))
-    df1 = df[["Text", "Entities_Details","Label"]]
+    if ttt == False:
+        df["Label"] = df["Label"].apply(lambda x: encode_label(x))
+        y = df["Label"].values
+    if ttt == True:
+        y = [0 for i in range(len(df))]
+        df["Label"] = y
+
+    df1 = df[["Text","Entities_Details","Label"]]
     df1["Combined"] = df1[df1.columns[:-1]].apply(lambda x: ' __NEW_FEATURE__ '.join(x.dropna().astype(str)),axis=1)
     #x = df["Entities"].values
     #x = df["Entities_Details"].values
@@ -63,7 +69,7 @@ def load_file(file, feat, DictVect = False, tfidf = False, tfIdfTransformer = No
 
     x = df1[feat].values
     #x = df.Text
-    y = df["Label"].values
+    #y = df["Label"].values
 
     if DictVect == False:
 
@@ -114,10 +120,7 @@ def train_eval(classifier, X_train, y_train, X_test, y_test, ensemble = False):
 
     print()
 
-    classifier.fit(X_train, y_train,
-                    epochs = 10,
-                    batch_size = 32,
-                    verbose = 1)
+    classifier.fit(X_train, y_train)
 
     y_predicted_test = classifier.predict(X_test)
     y_predicted_train = classifier.predict(X_train)
@@ -147,9 +150,9 @@ if __name__ == "__main__":
 
     #print(os.listdir("data/"))
 
-    train_data_path = "data/train_lower_entities.tsv"
+    train_data_path = "data/submission_train_lower_entities.tsv"
     #train_data_path = "data/train.tsv"
-    test_data_path = "data/valid_lower_entities.tsv"
+    test_data_path = "data/test_with_noise_lower_entities.tsv"
     #test_data_path = "data/valid.tsv"
     wordN = args.wordN
     charN = args.charN
@@ -157,7 +160,7 @@ if __name__ == "__main__":
     use_tfidf = True
 
     X_train, y_train, dictvect, tfidfvect = load_file(train_data_path, feat = "Combined", tfidf=use_tfidf, tfIdfTransformer=None, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
-    X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Combined", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN)
+    X_dev, y_dev, _, _ = load_file(test_data_path, feat = "Combined", DictVect=dictvect, tfidf=use_tfidf, tfIdfTransformer=tfidfvect, word_gram=wordN, char_gram=charN, wordpiece_gram=wordpieceN, ttt = True)
 
 
     classifier = LinearSVC(penalty='l2', loss='squared_hinge', \
@@ -166,6 +169,11 @@ if __name__ == "__main__":
 
 
 
-    f1_test, acc_test, y_preds = train_eval(classifier, X_train, y_train, X_dev, y_dev)
-    print("weighted f1: {0:.5f}".format(f1_test))
-    print("accuracy: {0:.5f}".format(acc_test))
+    #f1_test, acc_test, y_preds = train_eval(classifier, X_train, y_train, X_dev, y_dev)
+    preds = train_eval(classifier, X_train, y_train, X_dev, y_dev)
+
+    print(len(preds[2]))
+
+    np.save("ensemble_preds/svm_preds.npy", preds[2])
+    #print("weighted f1: {0:.5f}".format(f1_test))
+    #print("accuracy: {0:.5f}".format(acc_test))

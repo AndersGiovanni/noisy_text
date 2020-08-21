@@ -11,7 +11,7 @@ nlp = spacy.load("en_core_web_lg") # use large model
 
 
 def normalize(text):
-    print("Text", text)
+    #print("Text", text)
     # remove httpurl as it gets tagged as person
     if "httpurl" in text:
         text = text.replace("httpurl", "")
