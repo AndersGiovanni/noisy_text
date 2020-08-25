@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score, accuracy_score
 
 # Train
 bert = np.load('BERT_preds.npy')                #covid-twitter
@@ -32,9 +33,9 @@ trobertaProbs = np.load(prefix+"roberta_preds_proba.npy")
 
 golds = [line.strip().split('\t')[-1] =='INFORMATIVE' for line in open('data/valid.tsv').readlines()][1:]
 golds_ = [0 if i.strip().split('\t')[-1] == "UNINFORMATIVE" else 1 for i in open("data/valid.tsv").readlines()[1:]]
-print(golds_[:10])
+#print(golds_[:10])
 
-feats_train = []
+feats = []
 for i in range(len(bert)):
     instance = [bert[i], bertProbs[i][0], bertProbs[i][1], svm[i], conv[i], convProbs[i], mlp[i], mlpProbs[i], baseBert[i], baseBertProbs[i][0],baseBertProbs[i][1], roberta[i], robertaProbs[i][0],robertaProbs[i][1]]
     for j in range(len(instance)):
@@ -42,63 +43,67 @@ for i in range(len(bert)):
             instance[j] = float(instance[j][0])
         else:
             instance[j] = float(instance[j])
-    feats_train.append(instance)
+    feats.append(instance)
 
-feats_test = []
-for i in range(len(tbert)):
-    instance = [tbert[i], tbertProbs[i][0], tbertProbs[i][1], tsvm[i], tconv[i], tconvProbs[i], tmlp[i], tmlpProbs[i], tbaseBert[i], tbaseBertProbs[i][0],tbaseBertProbs[i][1], troberta[i], trobertaProbs[i][0],trobertaProbs[i][1]]
-    for j in range(len(instance)):
-        if type(instance[j]) == np.ndarray:
-            instance[j] = float(instance[j][0])
-        else:
-            instance[j] = float(instance[j])
-    feats_test.append(instance)
+# feats_test = []
+# for i in range(len(tbert)):
+#     instance = [tbert[i], tbertProbs[i][0], tbertProbs[i][1], tsvm[i], tconv[i], tconvProbs[i], tmlp[i], tmlpProbs[i], tbaseBert[i], tbaseBertProbs[i][0],tbaseBertProbs[i][1], troberta[i], trobertaProbs[i][0],trobertaProbs[i][1]]
+#     for j in range(len(instance)):
+#         if type(instance[j]) == np.ndarray:
+#             instance[j] = float(instance[j][0])
+#         else:
+#             instance[j] = float(instance[j])
+#     feats_test.append(instance)
 
-classifier = RandomForestClassifier(max_depth=5, random_state=0, n_estimators=200)
+# classifier = RandomForestClassifier(max_depth=5, random_state=0, n_estimators=200)
 
-classifier.fit(feats_train,golds_)
+# classifier.fit(feats_train,golds_)
 
-preds = classifier.predict(feats_test)
+# preds = classifier.predict(feats_test)
 
-print(len(preds))
-print(preds[:10])
+# print(len(preds))
+# print(preds[:10])
 
-f = open("final_predictions/predictions.txt", "w+")
-for i in preds:
-    if i == 0:
-        f.write("UNINFORMATIVE\n")
-    else:
-        f.write("INFORMATIVE\n")
+# f = open("final_predictions/predictions.txt", "w+")
+# for i in preds:
+#     if i == 0:
+#         f.write("UNINFORMATIVE\n")
+#     else:
+#         f.write("INFORMATIVE\n")
 
-f.close()
-# preds = []
-# numFolds = 10
-# for fold in range(numFolds):
-#     devBeg = int((len(bert) /numFolds) * fold)
-#     devEnd = int((len(bert) /numFolds) * (fold + 1))
-#     trainGold = golds[0:devBeg] + golds[devEnd:]
-#     trainFeats = feats[0:devBeg] + feats[devEnd:]
-#     devFeats = feats[devBeg:devEnd]
+# f.close()
 
-#     #classifier = LinearSVC()
-#     #classifier = LinearSVC(penalty='l2', loss='squared_hinge', dual=True, tol=0.0001, C=1.0, multi_class='ovr', fit_intercept=True, intercept_scaling=1, class_weight=None)
-#     classifier = RandomForestClassifier(max_depth=5, random_state=0, n_estimators=200)
-#     #classifier = LogisticRegression()
-#     classifier.fit(trainFeats, trainGold)
-#     preds.extend(classifier.predict(devFeats))
 
-#for i in range(len(feats)):
+preds = []
+numFolds = 10
+for fold in range(numFolds):
+    devBeg = int((len(bert) /numFolds) * fold)
+    devEnd = int((len(bert) /numFolds) * (fold + 1))
+    trainGold = golds[0:devBeg] + golds[devEnd:]
+    trainFeats = feats[0:devBeg] + feats[devEnd:]
+    devFeats = feats[devBeg:devEnd]
+
+    #classifier = LinearSVC()
+    #classifier = LinearSVC(penalty='l2', loss='squared_hinge', dual=True, tol=0.0001, C=1.0, multi_class='ovr', fit_intercept=True, intercept_scaling=1, class_weight=None)
+    classifier = RandomForestClassifier(max_depth=5, random_state=0, n_estimators=200)
+    #classifier = LogisticRegression()
+    classifier.fit(trainFeats, trainGold)
+    preds.extend(classifier.predict(devFeats))
+
+# for i in range(len(feats)):
 #    preds = [bert[i], svm[i], conv[i], mlp[i]]
 #    cors = 0
 #    for pred in preds:
 #        if pred == golds[i]:
 #            cors += 1
-#    print(cors)
+#    #print(cors)
 
-# cor = 0
-# for gold, pred in zip(golds, preds):
-#     if gold == pred:
-#         cor += 1
-# print(cor/len(bert))
+cor = 0
+for gold, pred in zip(golds, preds):
+    if gold == pred:
+        cor += 1
+print(cor/len(bert))
+print("{:.5f}".format(f1_score(golds, preds), average = "weighted"))
+print("{:.5f}".format(accuracy_score(golds, preds)))
 
 
