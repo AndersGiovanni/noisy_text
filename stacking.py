@@ -45,35 +45,6 @@ for i in range(len(bert)):
             instance[j] = float(instance[j])
     feats.append(instance)
 
-# feats_test = []
-# for i in range(len(tbert)):
-#     instance = [tbert[i], tbertProbs[i][0], tbertProbs[i][1], tsvm[i], tconv[i], tconvProbs[i], tmlp[i], tmlpProbs[i], tbaseBert[i], tbaseBertProbs[i][0],tbaseBertProbs[i][1], troberta[i], trobertaProbs[i][0],trobertaProbs[i][1]]
-#     for j in range(len(instance)):
-#         if type(instance[j]) == np.ndarray:
-#             instance[j] = float(instance[j][0])
-#         else:
-#             instance[j] = float(instance[j])
-#     feats_test.append(instance)
-
-# classifier = RandomForestClassifier(max_depth=5, random_state=0, n_estimators=200)
-
-# classifier.fit(feats_train,golds_)
-
-# preds = classifier.predict(feats_test)
-
-# print(len(preds))
-# print(preds[:10])
-
-# f = open("final_predictions/predictions.txt", "w+")
-# for i in preds:
-#     if i == 0:
-#         f.write("UNINFORMATIVE\n")
-#     else:
-#         f.write("INFORMATIVE\n")
-
-# f.close()
-
-
 preds = []
 numFolds = 10
 for fold in range(numFolds):
