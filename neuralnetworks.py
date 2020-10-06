@@ -79,6 +79,10 @@ def fileLoadPrep(file, embedding_file, word_tokenizer = False, length_median = F
 
 
 def makeModel(vocab_length, embedding_dim, embedding_matrix, input_dim):
+    
+    ##############################
+    ####### For FFNN model #######
+    ##############################
     model = tf.keras.Sequential()
     embedding_layer = tf.keras.layers.Embedding(vocab_length, embedding_dim, weights=[embedding_matrix], input_length=input_dim, trainable=False)
     model.add(embedding_layer)
@@ -87,6 +91,17 @@ def makeModel(vocab_length, embedding_dim, embedding_matrix, input_dim):
     model.add(tf.keras.layers.Dense(512, activation = "relu"))
     model.add(tf.keras.layers.Flatten())
     model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
+
+    ################################
+    ####### For Conv1d model #######
+    ################################
+    # embedding_layer = tf.keras.layers.Embedding(vocab_length, embedding_dim, weights=[embedding_matrix], input_length=input_dim, trainable=False)
+    # model.add(embedding_layer)
+    # model.add(tf.keras.layers.Conv1D(filters = 64, kernel_size = 5, activation="relu"))
+    # model.add(tf.keras.layers.Dropout(0.5))
+    # model.add(tf.keras.layers.MaxPooling1D(pool_size=2))
+    # model.add(tf.keras.layers.Flatten())
+    # model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
     model.compile(optimizer='adagrad', loss='binary_crossentropy', metrics=['acc'])
 
